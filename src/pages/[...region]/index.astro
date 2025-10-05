@@ -121,19 +121,19 @@ const stamps = (
         const remaining = 5000 - passed;
         setTimeout(
           () => {
-            // self remove
-            this.parentNode!.removeChild(this);
+            // self remove after animation is done
+            img.addEventListener(
+              "animationend",
+              () => this.parentNode!.removeChild(this),
+              { once: true }
+            );
+            img.classList.add("hide");
           },
           // ensure the stamp is displayed for at least 1s
           // in case the 5s windows have already passed
           Math.max(remaining, 1000)
         );
       };
-
-      img.style.animation = "bounceIn 0.55s ease-out forwards";
-
-      img.style.height = this.style.height = "165px";
-      img.style.width = this.style.width = "200px";
 
       if (audio !== undefined) {
         // if its voiced, wait until the audio is loaded before displaying the stamp
@@ -172,22 +172,60 @@ const stamps = (
   customElements.define("bandori-stamp", BandoriStamp);
 </script>
 
-<style>
+<style is:global>
   @keyframes bounceIn {
     0% {
-      opacity: 0;
       transform: scale(0.3);
+      opacity: 0;
     }
-    50% {
+    20% {
+      transform: scale(1.05);
       opacity: 1;
-      transform: scale(1);
     }
-    70% {
+    40% {
       transform: scale(0.9);
     }
+    60% {
+      transform: scale(1.03);
+    }
+    80% {
+      transform: scale(0.97);
+    }
     100% {
-      opacity: 1;
       transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes bounceOut {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    20% {
+      transform: scale(0.9);
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.3);
+      opacity: 0;
+    }
+  }
+
+  bandori-stamp,
+  bandori-stamp > img {
+    height: 165px;
+    width: 200px;
+  }
+
+  bandori-stamp > img {
+    animation: bounceIn 0.75s forwards;
+
+    &.hide {
+      animation: bounceOut 0.75s forwards;
     }
   }
 </style>
