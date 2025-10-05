@@ -20,6 +20,19 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
+
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+
+      - name: Cache bestdori responses
+        uses: actions/cache@v4
+        with:
+          path: bestdori-cache
+          key: ${{ runner.os }}-bestdori-${{ hashFiles('src/pages/static/**') }}
+
       - name: Install, build, and upload your site
         uses: withastro/action@v3
 
