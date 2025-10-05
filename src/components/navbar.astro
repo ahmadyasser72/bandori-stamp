@@ -1,0 +1,81 @@
+---
+import { Icon } from "astro-icon/components";
+import { REGION_FLAG, REGION_FULLNAME, REGIONS } from "~/constants";
+
+interface Props {
+  title: string;
+}
+
+const { region } = Astro.params;
+const { title } = Astro.props;
+---
+
+<div class="navbar bg-base-100 border-b px-4 lg:px-8">
+  <div class="flex-1">
+    <a class="btn btn-ghost text-xl">{title}</a>
+  </div>
+  <div class="flex flex-none items-center space-x-2 sm:space-x-4">
+    <label class="swap swap-rotate btn btn-circle btn-accent">
+      <input
+        id="theme-controller"
+        type="checkbox"
+        value="synthwave"
+        class="theme-controller"
+      />
+
+      <Icon name="lucide:sun" class="swap-off size-6 fill-current" />
+      <Icon name="lucide:moon-star" class="swap-on size-6 fill-current" />
+    </label>
+
+    <button
+      class="btn btn-circle btn-primary"
+      popovertarget="region-popover"
+      style="anchor-name:--anchor-region"
+    >
+      <Icon name="lucide:globe" class="size-6" />
+    </button>
+    <ul
+      class="dropdown dropdown-end menu rounded-box bg-base-100 mt-4 shadow-sm"
+      popover
+      id="region-popover"
+      style="position-anchor:--anchor-region"
+    >
+      <li>
+        <a href="/">
+          <Icon name="twemoji:globe-showing-americas" class="size-6" />
+          All Server
+        </a>
+      </li>
+
+      {
+        REGIONS.filter((it) => it !== region).map((region) => (
+          <li>
+            <a href={`/${region}`}>
+              <Icon name={REGION_FLAG[region]} class="size-6" />
+              {REGION_FULLNAME[region]}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>
+
+<script>
+  const themeController = document.getElementById(
+    "theme-controller"
+  ) as HTMLInputElement;
+
+  const toggleTheme = () => {
+    const isDark = themeController.checked;
+    const theme = isDark ? "dracula" : "bumblebee";
+
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("is-dark", isDark ? "true" : "false");
+  };
+
+  document.addEventListener("astro:page-load", toggleTheme);
+  themeController.addEventListener("input", toggleTheme);
+  themeController.checked = localStorage.getItem("is-dark") === "true";
+  toggleTheme();
+</script>
