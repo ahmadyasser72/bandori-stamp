@@ -5,7 +5,6 @@ import { existsSync, writeFileSync, readFileSync } from "node:fs";
 export const GET: APIRoute = async ({ params, props }) => {
   const { id } = props;
   const { region, stampId } = params;
-  console.log(id, region, stampId);
 
   const cachePath = `./bestdori-cache/${id}.png`;
   if (existsSync(cachePath)) {
