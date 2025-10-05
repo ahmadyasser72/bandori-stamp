@@ -2,8 +2,6 @@ import type { APIRoute, GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
-import { REGIONS } from "~/constants";
-
 export const GET: APIRoute = async ({ params, props }) => {
   const { id } = props;
   const { region, stampId } = params;
@@ -30,7 +28,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return stamps
     .filter(({ data }) => data.voiced)
-    .flatMap(({ data: { id, stampId } }) =>
-      REGIONS.map((region) => ({ params: { region, stampId }, props: { id } })),
-    );
+    .map(({ data: { id, stampId, region } }) => ({
+      params: { region, stampId },
+      props: { id },
+    }));
 };

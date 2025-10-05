@@ -2,11 +2,10 @@ import type { APIRoute, GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 
-import { REGIONS } from "~/constants";
-
 export const GET: APIRoute = async ({ params, props }) => {
   const { id } = props;
   const { region, stampId } = params;
+  console.log(id, region, stampId);
 
   const cachePath = `./bestdori-cache/${id}.png`;
   if (existsSync(cachePath)) {
@@ -28,7 +27,8 @@ export const GET: APIRoute = async ({ params, props }) => {
 export const getStaticPaths: GetStaticPaths = async () => {
   const stamps = await getCollection("stamps");
 
-  return stamps.flatMap(({ data: { id, stampId } }) =>
-    REGIONS.map((region) => ({ params: { region, stampId }, props: { id } })),
-  );
+  return stamps.map(({ data: { id, stampId, region } }) => ({
+    params: { region, stampId },
+    props: { id },
+  }));
 };

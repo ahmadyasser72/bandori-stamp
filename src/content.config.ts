@@ -23,7 +23,7 @@ const stamps = defineCollection({
           `https://bestdori.com/api/explorer/${region}/assets/sound/voice_stamp.json`,
         )
           .then((response) => response.json())
-          .then((items: string[]) => items.filter((it) => it.endsWith("mp3")));
+          .then((items: string[]) => items.filter((it) => it.endsWith(".mp3")));
 
         return allStamps.map((stamp) => {
           const stampId = stamp.split(".")[0]!;

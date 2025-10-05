@@ -31,7 +31,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: bestdori-cache
-          key: ${{ runner.os }}-bestdori-${{ hashFiles('src/pages/static/**') }}
+          key: ${{ runner.os }}-bestdori-${{ hashFiles('src/pages/static/**', 'src/content.config.ts') }}
 
       - name: Install, build, and upload your site
         uses: withastro/action@v3
