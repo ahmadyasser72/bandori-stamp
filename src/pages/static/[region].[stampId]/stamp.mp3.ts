@@ -1,6 +1,7 @@
-import type { APIRoute } from "astro";
+import type { APIRoute, GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
 
-export { getStaticPaths } from "./stamp.png";
+import { REGIONS } from "~/constants";
 
 export const GET: APIRoute = async ({ params }) => {
   const { region, stampId } = params;
@@ -10,4 +11,14 @@ export const GET: APIRoute = async ({ params }) => {
   );
 
   return new Response(await audioResponse.arrayBuffer());
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const stamps = await getCollection("stamps");
+
+  return stamps
+    .filter(({ data }) => data.voiced)
+    .flatMap(({ data: { stampId } }) =>
+      REGIONS.map((region) => ({ params: { region, stampId } })),
+    );
 };
