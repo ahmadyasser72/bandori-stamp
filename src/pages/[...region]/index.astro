@@ -41,11 +41,14 @@ const stamps = (
       <Navbar {title} />
 
       <main class="relative container flex-1 px-2 py-8">
-        <button
-          id="show-random-stamp"
-          class="btn absolute !top-1/2 !left-1/2 !-translate-x-1/2 !-translate-y-1/2"
-          >Show Random</button
+        <div
+          class="absolute !top-1/2 !left-1/2 flex !-translate-x-1/2 !-translate-y-1/2 flex-col gap-4"
         >
+          <button id="show-random-stamp" class="btn">Show Random</button>
+          <button id="show-random-voiced-stamp" class="btn"
+            >Show Random Voiced</button
+          >
+        </div>
 
         <div
           id="stamp-overlay"
@@ -83,15 +86,18 @@ const stamps = (
 
   const stampOverlay = document.getElementById("stamp-overlay") as HTMLElement;
   const stamps = devalue.parse(stampOverlay.dataset.stamps!) as Stamp[];
-  const playButton = document.getElementById(
-    "show-random-stamp"
-  ) as HTMLButtonElement;
+  const voicedStamps = stamps.filter((it) => it.voiced);
+  const playStamp = (voiced: boolean) => {
+    const stamp = getRandomItem(voiced ? voicedStamps : stamps);
+    stampOverlay.appendChild(new BandoriStamp({ ...stamp, voiced }));
+  };
 
-  playButton.addEventListener("click", () => {
-    const stamp = getRandomItem(stamps);
-    const bandoriStamp = new BandoriStamp(stamp);
-    stampOverlay.appendChild(bandoriStamp);
-  });
+  document
+    .getElementById("show-random-stamp")
+    ?.addEventListener("click", () => playStamp(false));
+  document
+    .getElementById("show-random-voiced-stamp")
+    ?.addEventListener("click", () => playStamp(true));
 
   class BandoriStamp extends HTMLElement {
     stamp: Stamp;
