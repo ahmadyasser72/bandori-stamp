@@ -23,4 +23,5 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-bestdori-cache/*
+bestdori-cache/*.png
+bestdori-cache/*.mp3
