@@ -1,6 +1,7 @@
 ---
 import { Icon } from "astro-icon/components";
 import { REGION_FLAG, REGION_FULLNAME, REGIONS } from "~/constants";
+import { base } from "astro:config/server";
 
 interface Props {
   title: string;
@@ -41,7 +42,7 @@ const { title } = Astro.props;
       style="position-anchor:--anchor-region"
     >
       <li>
-        <a href="/">
+        <a href={base}>
           <Icon name="twemoji:globe-showing-americas" class="size-6" />
           All Server
         </a>
@@ -50,7 +51,7 @@ const { title } = Astro.props;
       {
         REGIONS.filter((it) => it !== region).map((region) => (
           <li>
-            <a href={`/${region}`}>
+            <a href={`${base}/${region}`}>
               <Icon name={REGION_FLAG[region]} class="size-6" />
               {REGION_FULLNAME[region]}
             </a>

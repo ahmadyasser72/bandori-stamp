@@ -7,6 +7,7 @@ import { defineConfig } from "astro/config";
 export default defineConfig({
   site: "https://ahmadyasser72.github.io",
   base: "/bandori-stamp",
+  trailingSlash: "never",
 
   vite: {
     plugins: [tailwindcss()],
