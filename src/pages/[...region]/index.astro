@@ -46,16 +46,20 @@ const stamps = (
 
 <script>
   import * as devalue from "devalue";
-  import { base } from "astro:config/client";
+
   import type { Stamp } from "~/content.config";
-  import { getRandomItem } from "~/utilities";
+  import { getRandomItem, loadStamp, type LoadedStamp } from "~/utilities";
 
   const stampOverlay = document.getElementById("stamp-overlay") as HTMLElement;
-  const stamps = devalue.parse(stampOverlay.dataset.stamps!) as Stamp[];
-  const voicedStamps = stamps.filter((it) => it.voiced);
-  const playStamp = (voiced: boolean) => {
-    const stamp = getRandomItem(voiced ? voicedStamps : stamps);
-    stampOverlay.appendChild(new BandoriStamp({ ...stamp, voiced }));
+
+  const allStamps = devalue.parse(stampOverlay.dataset.stamps!) as Stamp[];
+  const voicedStamps = allStamps.filter((it) => it.voiced);
+
+  const playStamp = async (voiced: boolean) => {
+    const randomStamp = getRandomItem(voiced ? voicedStamps : allStamps);
+    const stamp = await loadStamp(randomStamp);
+
+    stampOverlay.appendChild(new BandoriStamp(stamp));
   };
 
   document
@@ -66,9 +70,9 @@ const stamps = (
     ?.addEventListener("click", () => playStamp(true));
 
   class BandoriStamp extends HTMLElement {
-    stamp: Stamp;
+    stamp: LoadedStamp;
 
-    constructor(stamp: Stamp) {
+    constructor(stamp: LoadedStamp) {
       super();
 
       this.stamp = stamp;
@@ -81,63 +85,22 @@ const stamps = (
     }
 
     connectedCallback() {
-      const { stampId, region, voiced } = this.stamp;
-      const basePath = `${base}/static/${region}.${stampId}/stamp`;
+      this.appendChild(this.stamp.image);
+      if (this.stamp.audio !== undefined) {
+        this.stamp.audio.play();
+      }
 
-      const img = new Image();
-      img.src = basePath + ".png";
-      const audio = voiced ? new Audio(basePath + ".mp3") : undefined;
-
-      const cleanup = (passed: number = 0) => {
-        // wait at most 5s before removing the stamp
-        const remaining = 5000 - passed;
-        setTimeout(
-          () => {
-            // self remove after animation is done
-            img.addEventListener(
-              "animationend",
-              () => this.parentNode!.removeChild(this),
-              { once: true }
-            );
-            img.classList.add("hide");
-          },
-          // ensure the stamp is displayed for at least 1s
-          // in case the 5s windows have already passed
-          Math.max(remaining, 1000)
-        );
-      };
-
-      if (audio !== undefined) {
-        // if its voiced, wait until the audio is loaded before displaying the stamp
-        const displayImageAndPlayAudio = () => {
-          this.appendChild(img);
-
-          audio.play();
-          const started = Date.now();
-          audio.addEventListener("ended", () => cleanup(Date.now() - started));
-        };
-
-        audio.addEventListener(
-          "canplaythrough",
-          () => {
-            if (img.complete) displayImageAndPlayAudio();
-            else
-              img.addEventListener("load", displayImageAndPlayAudio, {
-                once: true,
-              });
-          },
+      // self remove after 5s
+      setTimeout(() => {
+        // start hide animation
+        this.stamp.image.classList.add("hide");
+        // then self remove after animation is done
+        this.stamp.image.addEventListener(
+          "animationend",
+          () => stampOverlay.removeChild(this),
           { once: true }
         );
-      } else {
-        // otherwise, display the stammp immediately
-        const displayImage = () => {
-          this.appendChild(img);
-          cleanup();
-        };
-
-        if (img.complete) displayImage();
-        else img.addEventListener("load", displayImage, { once: true });
-      }
+      }, 5000);
     }
   }
 
