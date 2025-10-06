@@ -1,12 +1,10 @@
 ---
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
-import { base } from "astro:config/server";
 import * as devalue from "devalue";
 
-import Navbar from "~/components/navbar.astro";
 import { REGIONS } from "~/constants";
-import "~/styles/global.css";
+import DefaultLayout from "~/layouts/default-layout.astro";
 
 export const getStaticPaths = (() => [
   { params: { region: undefined } },
@@ -28,55 +26,23 @@ const stamps = (
 ).map(({ data }) => data);
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-  </head>
-  <body>
-    <div class="flex min-h-screen flex-col items-center">
-      <Navbar {title} />
+<DefaultLayout {title}>
+  <div
+    class="absolute !top-1/2 !left-1/2 flex !-translate-x-1/2 !-translate-y-1/2 flex-col gap-4"
+  >
+    <button id="show-random-stamp" class="btn btn-accent">Show Random</button>
+    <button id="show-random-voiced-stamp" class="btn btn-accent"
+      >Show Random Voiced</button
+    >
+  </div>
 
-      <main class="relative container flex-1 px-2 py-8">
-        <div
-          class="absolute !top-1/2 !left-1/2 flex !-translate-x-1/2 !-translate-y-1/2 flex-col gap-4"
-        >
-          <button id="show-random-stamp" class="btn">Show Random</button>
-          <button id="show-random-voiced-stamp" class="btn"
-            >Show Random Voiced</button
-          >
-        </div>
-
-        <div
-          id="stamp-overlay"
-          class="pointer-events-none absolute inset-0"
-          data-stamps={devalue.stringify(stamps)}
-        >
-        </div>
-      </main>
-
-      <footer
-        class="bg-base-100 w-full border-t px-4 py-2 text-center sm:text-end"
-      >
-        Icons by <a
-          class="link"
-          href="https://lucide.dev"
-          target="_blank"
-          rel="noopener noreferrer">Lucide</a
-        > (ISC) &
-        <a
-          class="link"
-          href="https://twemoji.twitter.com/"
-          target="_blank"
-          rel="noopener noreferrer">Twemoji</a
-        > (CC BY 4.0)
-      </footer>
-    </div>
-  </body>
-</html>
+  <div
+    id="stamp-overlay"
+    class="pointer-events-none absolute inset-0"
+    data-stamps={devalue.stringify(stamps)}
+  >
+  </div>
+</DefaultLayout>
 
 <script>
   import * as devalue from "devalue";
