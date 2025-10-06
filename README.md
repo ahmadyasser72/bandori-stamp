@@ -23,3 +23,7 @@ This project uses the following third-party assets:
 - **Source:** [https://bestdori.com](https://bestdori.com)
 - **Usage:** Stamp data retrieved from Bestdori’s website
 - **Copyright:** © Bestdori! contributors
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html).
