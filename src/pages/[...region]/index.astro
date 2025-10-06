@@ -36,30 +36,28 @@ const stamps = (
     >
   </div>
 
-  <div
-    id="stamp-overlay"
-    class="pointer-events-none absolute inset-0 select-none"
-    data-stamps={devalue.stringify(stamps)}
-  >
-  </div>
+  <bandori-stamp-container> </bandori-stamp-container>
+  <div id="stamp-data" data-stamps={devalue.stringify(stamps)}></div>
 </DefaultLayout>
 
 <script>
   import * as devalue from "devalue";
 
+  import {
+    BandoriStamp,
+    BandoriStampContainer,
+  } from "~/components/bandori-stamp";
   import type { Stamp } from "~/content.config";
-  import { getRandomItem, loadStamp, type LoadedStamp } from "~/utilities";
+  import { getRandomItem, loadStamp } from "~/utilities";
 
-  const stampOverlay = document.getElementById("stamp-overlay") as HTMLElement;
-
-  const allStamps = devalue.parse(stampOverlay.dataset.stamps!) as Stamp[];
+  const stampData = document.getElementById("stamp-data") as HTMLElement;
+  const allStamps = devalue.parse(stampData.dataset.stamps!) as Stamp[];
   const voicedStamps = allStamps.filter((it) => it.voiced);
 
   const playStamp = async (voiced: boolean) => {
     const randomStamp = getRandomItem(voiced ? voicedStamps : allStamps);
     const stamp = await loadStamp(randomStamp);
-
-    stampOverlay.appendChild(new BandoriStamp(stamp));
+    BandoriStamp.show(stamp);
   };
 
   document
@@ -69,98 +67,5 @@ const stamps = (
     .getElementById("show-random-voiced-stamp")
     ?.addEventListener("click", () => playStamp(true));
 
-  class BandoriStamp extends HTMLElement {
-    stamp: LoadedStamp;
-
-    constructor(stamp: LoadedStamp) {
-      super();
-
-      this.stamp = stamp;
-
-      this.className = "absolute transform-origin-top-left";
-      const [randomX, randomY] = [Math.random() * 100, Math.random() * 100];
-      this.style.left = randomX + "%";
-      this.style.top = randomY + "%";
-      this.style.transform = `translate(${randomX * -1}%, ${randomY * -1}%)`;
-    }
-
-    connectedCallback() {
-      this.appendChild(this.stamp.image);
-      if (this.stamp.audio !== undefined) {
-        this.stamp.audio.play();
-      }
-
-      // self remove after 5s
-      setTimeout(() => {
-        // start hide animation
-        this.stamp.image.classList.add("hide");
-        // then self remove after animation is done
-        this.stamp.image.addEventListener(
-          "animationend",
-          () => stampOverlay.removeChild(this),
-          { once: true }
-        );
-      }, 5000);
-    }
-  }
-
-  customElements.define("bandori-stamp", BandoriStamp);
+  BandoriStampContainer.initialize();
 </script>
-
-<style is:global>
-  @keyframes bounceIn {
-    0% {
-      transform: scale(0.3);
-      opacity: 0;
-    }
-    20% {
-      transform: scale(1.05);
-      opacity: 1;
-    }
-    40% {
-      transform: scale(0.9);
-    }
-    60% {
-      transform: scale(1.03);
-    }
-    80% {
-      transform: scale(0.97);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes bounceOut {
-    0% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    20% {
-      transform: scale(0.9);
-    }
-    50% {
-      transform: scale(1.05);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(0.3);
-      opacity: 0;
-    }
-  }
-
-  bandori-stamp,
-  bandori-stamp > img {
-    height: 165px;
-    width: 200px;
-  }
-
-  bandori-stamp > img {
-    animation: bounceIn 0.75s forwards;
-
-    &.hide {
-      animation: bounceOut 0.75s forwards;
-    }
-  }
-</style>
