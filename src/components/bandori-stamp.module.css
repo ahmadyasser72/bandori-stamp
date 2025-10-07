@@ -40,6 +40,10 @@
   }
 }
 
+.stamp {
+  @apply pointer-events-none absolute origin-top-left select-none;
+}
+
 .stamp,
 .stamp > img {
   height: 165px;

@@ -19,7 +19,7 @@ const title =
 
 <DefaultLayout {title}>
   <div
-    class="absolute !top-1/2 !left-1/2 flex !-translate-x-1/2 !-translate-y-1/2 flex-col gap-4"
+    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col gap-4"
   >
     <button id="show-random-stamp" class="btn btn-accent">Show Random</button>
     <button id="show-random-voiced-stamp" class="btn btn-accent"
@@ -27,18 +27,15 @@ const title =
     >
   </div>
 
-  <bandori-stamp-container> </bandori-stamp-container>
+  <div id="stamp-container" class="pointer-events-none absolute inset-0"></div>
 </DefaultLayout>
 
 <script>
   import * as devalue from "devalue";
 
-  import {
-    BandoriStamp,
-    BandoriStampContainer,
-  } from "~/components/bandori-stamp";
+  import { BandoriStamp } from "~/components/bandori-stamp";
   import type { Stamp } from "~/content.config";
-  import { getRandomItem, loadStamp } from "~/utilities";
+  import { getRandomItem } from "~/utilities";
 
   const allStamps = await fetch("stamp.json")
     .then((response) => response.text())
@@ -46,9 +43,8 @@ const title =
   const voicedStamps = allStamps.filter((it) => it.voiced);
 
   const playStamp = async (voiced: boolean) => {
-    const randomStamp = getRandomItem(voiced ? voicedStamps : allStamps);
-    const stamp = await loadStamp(randomStamp);
-    BandoriStamp.show(stamp);
+    const stamp = getRandomItem(voiced ? voicedStamps : allStamps);
+    await BandoriStamp.show(stamp);
   };
 
   document
@@ -58,5 +54,5 @@ const title =
     .getElementById("show-random-voiced-stamp")
     ?.addEventListener("click", () => playStamp(true));
 
-  BandoriStampContainer.initialize();
+  BandoriStamp.initialize(document.getElementById("stamp-container")!);
 </script>

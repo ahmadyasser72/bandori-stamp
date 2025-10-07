@@ -1,17 +1,20 @@
-import type { LoadedStamp } from "~/utilities";
+import { base } from "astro:config/client";
+
+import type { Stamp } from "~/content.config";
 
 import styles from "./bandori-stamp.module.css";
 
 export class BandoriStamp extends HTMLElement {
-  static stampContainer: BandoriStampContainer;
-  static initialize(overlay: BandoriStampContainer) {
-    this.stampContainer = overlay;
+  static stampContainer: HTMLElement;
+  static initialize(container: HTMLElement) {
+    this.stampContainer = container;
     if (customElements.get("bandori-stamp") === undefined)
       customElements.define("bandori-stamp", this);
   }
 
-  static show(stamp: LoadedStamp) {
-    this.stampContainer.appendChild(new BandoriStamp(stamp));
+  static async show(stamp: Stamp) {
+    const loaded = await loadStamp(stamp);
+    this.stampContainer.appendChild(new BandoriStamp(loaded));
   }
 
   stamp: LoadedStamp;
@@ -20,7 +23,7 @@ export class BandoriStamp extends HTMLElement {
 
     this.stamp = stamp;
 
-    this.className = `absolute transform-origin-top-left ${styles.stamp}`;
+    this.className = styles.stamp!;
     const [randomX, randomY] = [Math.random() * 100, Math.random() * 100];
     this.style.left = randomX + "%";
     this.style.top = randomY + "%";
@@ -28,38 +31,51 @@ export class BandoriStamp extends HTMLElement {
   }
 
   connectedCallback() {
-    this.appendChild(this.stamp.image);
+    const img = new Image();
+    img.src = this.stamp.image;
+    this.appendChild(img);
+
     if (this.stamp.audio !== undefined) {
-      this.stamp.audio.play();
+      const audio = new Audio(this.stamp.audio);
+      audio.addEventListener("ended", () => audio.remove());
+      audio.play();
     }
 
     // self remove after 5s
     setTimeout(() => {
       // start hide animation
-      this.stamp.image.className = styles.hide!;
+      img.className = styles.hide!;
       // then self remove after animation is done
-      this.stamp.image.addEventListener(
+      img.addEventListener(
         "animationend",
-        () => BandoriStamp.stampContainer.removeChild(this),
+        () => {
+          // cleanup image blob url first before removing
+          URL.revokeObjectURL(this.stamp.image);
+          this.remove();
+
+          // then cleanup audio blob url
+          if (this.stamp.audio !== undefined)
+            URL.revokeObjectURL(this.stamp.audio);
+        },
         { once: true },
       );
     }, 5000);
   }
 }
 
-export class BandoriStampContainer extends HTMLElement {
-  static initialize() {
-    if (customElements.get("bandori-stamp-container") === undefined)
-      customElements.define("bandori-stamp-container", this);
-  }
+export type LoadedStamp = Awaited<ReturnType<typeof loadStamp>>;
+export const loadStamp = async ({ id, stampId, region, voiced }: Stamp) => {
+  const basePath = `${base}/static/${region}.${stampId}/stamp`;
+  const [image, audio] = [`${basePath}.png`, `${basePath}.mp3`];
 
-  constructor() {
-    super();
-
-    this.className = "pointer-events-none absolute inset-0 select-none";
-  }
-
-  connectedCallback() {
-    BandoriStamp.initialize(this);
-  }
-}
+  return Promise.all([
+    fetch(image)
+      .then((response) => response.blob())
+      .then(URL.createObjectURL),
+    !voiced
+      ? Promise.resolve(undefined)
+      : fetch(audio)
+          .then((response) => response.blob())
+          .then(URL.createObjectURL),
+  ]).then(([image, audio]) => ({ id, image, audio }));
+};
