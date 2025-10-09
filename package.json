@@ -10,19 +10,22 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/svelte": "^7.2.0",
     "@tailwindcss/vite": "^4.1.14",
-    "astro": "^5.14.1",
-    "astro-icon": "^1.1.5",
-    "daisyui": "^5.1.27",
+    "astro": "^5.14.3",
+    "daisyui": "^5.1.29",
     "devalue": "^5.3.2",
-    "tailwindcss": "^4.1.14"
+    "iconify-icon": "^3.0.1",
+    "svelte": "^5.39.11",
+    "svelte-persisted-state": "^1.2.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.68",
-    "@iconify-json/twemoji": "^1.2.4",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "prettier": "^3.6.2",
     "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-svelte": "^3.4.0",
     "prettier-plugin-tailwindcss": "^0.6.14"
   }
 }

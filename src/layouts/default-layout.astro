@@ -10,13 +10,11 @@ interface Props {
 }
 
 const { title } = Astro.props;
-const { pathname } = Astro.url;
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <base href={pathname.endsWith("/") ? pathname : `${pathname}/`} />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
@@ -34,3 +32,7 @@ const { pathname } = Astro.url;
     </div>
   </body>
 </html>
+
+<script>
+  import "iconify-icon";
+</script>

@@ -1,4 +1,10 @@
-import { defineCollection, z } from "astro:content";
+import { file } from "astro/loaders";
+import {
+  defineCollection,
+  reference,
+  z,
+  type InferEntrySchema,
+} from "astro:content";
 
 import { REGIONS } from "~/constants";
 
@@ -8,6 +14,10 @@ export interface Stamp {
   voiced: boolean;
   region: (typeof REGIONS)[number];
 }
+export type Band = InferEntrySchema<"bands">;
+export type Member = Omit<InferEntrySchema<"members">, "band"> & {
+  band: Band;
+};
 
 const stamps = defineCollection({
   loader: (): Promise<Stamp[]> =>
@@ -49,4 +59,20 @@ const stamps = defineCollection({
   }),
 });
 
-export const collections = { stamps };
+const bands = defineCollection({
+  loader: file("src/data/bands.json"),
+  schema: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+});
+const members = defineCollection({
+  loader: file("src/data/members.json"),
+  schema: z.object({
+    id: z.string(),
+    name: z.string(),
+    band: reference("bands"),
+  }),
+});
+
+export const collections = { stamps, bands, members };

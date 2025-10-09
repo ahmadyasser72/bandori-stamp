@@ -1,6 +1,9 @@
 ---
 import type { GetStaticPaths } from "astro";
+import { getEntry } from "astro:content";
+import { getCollection } from "astro:content";
 
+import BandoriStampPlayground from "~/components/svelte/bandori-stamp-playground.svelte";
 import { REGIONS } from "~/constants";
 import DefaultLayout from "~/layouts/default-layout.astro";
 
@@ -15,44 +18,23 @@ const title =
   region === undefined
     ? "Bandori Stamp"
     : `Bandori Stamp (${region.toUpperCase()})`;
+
+const members = await Promise.all(
+  (await getCollection("members")).map(async ({ data }) => ({
+    ...data,
+    band: (await getEntry("bands", data.band.id))!.data,
+  }))
+);
+const stamps = (
+  await getCollection(
+    "stamps",
+    ({ data }) => region === undefined || data.region === region
+  )
+)
+  .map(({ data }) => data)
+  .sort((a, b) => a.stampId.localeCompare(b.stampId));
 ---
 
 <DefaultLayout {title}>
-  <div
-    class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col gap-4"
-  >
-    <button id="show-random-stamp" class="btn btn-accent">Show Random</button>
-    <button id="show-random-voiced-stamp" class="btn btn-accent"
-      >Show Random Voiced</button
-    >
-  </div>
-
-  <div id="stamp-container" class="pointer-events-none absolute inset-0"></div>
+  <BandoriStampPlayground {members} {stamps} client:load />
 </DefaultLayout>
-
-<script>
-  import * as devalue from "devalue";
-
-  import { BandoriStamp } from "~/components/bandori-stamp";
-  import type { Stamp } from "~/content.config";
-  import { getRandomItem } from "~/utilities";
-
-  const allStamps = await fetch("stamp.json")
-    .then((response) => response.text())
-    .then((text): Stamp[] => devalue.parse(text));
-  const voicedStamps = allStamps.filter((it) => it.voiced);
-
-  const playStamp = async (voiced: boolean) => {
-    const stamp = getRandomItem(voiced ? voicedStamps : allStamps);
-    await BandoriStamp.show(stamp);
-  };
-
-  document
-    .getElementById("show-random-stamp")
-    ?.addEventListener("click", () => playStamp(false));
-  document
-    .getElementById("show-random-voiced-stamp")
-    ?.addEventListener("click", () => playStamp(true));
-
-  BandoriStamp.initialize(document.getElementById("stamp-container")!);
-</script>
