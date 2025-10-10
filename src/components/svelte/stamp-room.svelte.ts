@@ -95,11 +95,14 @@ export const initializeRoom = () => {
 
         // if they already here...
         if (key in room.participants) {
+          const oldName = room.participants[key]!;
           const { name: newName } = newPresences[0]!;
+
+          // if name is not modified
+          if (oldName === newName) return;
 
           // if they are not ourselves...
           if (room.presenceId !== key) {
-            const oldName = room.participants[key]!;
             toast.info(`${oldName} changed their display name to ${newName}.`);
           } else {
             toast.info(`Display name updated to ${newName}.`);
