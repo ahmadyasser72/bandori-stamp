@@ -10,7 +10,7 @@ import { toast } from "svelte-sonner";
 import type { Stamp } from "~/content.config";
 
 import { displayStamp } from "./state-playground.svelte";
-import { loadStamp } from "./utilities";
+import { isTabActive, loadStamp } from "./utilities";
 
 export const room = $state<{
   client?: SupabaseClient;
@@ -62,6 +62,8 @@ export const initializeRoom = () => {
 
     room.channel
       .on("broadcast", { event: "stamp" }, async (data) => {
+        if (!isTabActive()) return;
+
         const stamp: Stamp & { sender: string } = data.payload;
         const loaded = await loadStamp(stamp);
         displayStamp({ ...loaded, sender: room.participants[stamp.sender]! });
@@ -74,6 +76,8 @@ export const initializeRoom = () => {
         );
       })
       .on<Presence>("presence", { event: "join" }, ({ key, newPresences }) => {
+        if (!isTabActive()) return;
+
         // if they already here...
         if (key in room.participants) {
           const { name: newName } = newPresences[0]!;
@@ -97,7 +101,12 @@ export const initializeRoom = () => {
         { event: "leave" },
         ({ key, currentPresences, leftPresences }) => {
           // if they are ourselves OR they're still here, early exit
-          if (room.presenceId === key || currentPresences.length !== 0) return;
+          if (
+            !isTabActive() ||
+            room.presenceId === key ||
+            currentPresences.length !== 0
+          )
+            return;
 
           const { name } = leftPresences[0]!;
           toast.info(`${name} just left.`);

@@ -48,7 +48,6 @@ export const loadStampAudio = async (
   const blob = await response.blob();
   return URL.createObjectURL(blob);
 };
-
 export const getStampAssetUrl = ({
   stampId,
   region,
@@ -56,3 +55,5 @@ export const getStampAssetUrl = ({
   const basePath = `${base}/static/${region}/${stampId}`;
   return { image: `${basePath}.png`, audio: `${basePath}.mp3` };
 };
+
+export const isTabActive = () => document.visibilityState === "visible";
