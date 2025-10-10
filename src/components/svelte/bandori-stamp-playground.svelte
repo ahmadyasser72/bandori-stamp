@@ -50,7 +50,9 @@
     >
       <ul class="tooltip-content pointer-events-auto max-h-32 overflow-y-auto">
         {#each Object.values(room.participants) as name, idx}
-          <li>{idx + 1} - {name}</li>
+          <li>
+            {idx + 1} - {name === room.displayName ? `${name} (You)` : name}
+          </li>
         {/each}
       </ul>
 
