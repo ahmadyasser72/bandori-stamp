@@ -2,17 +2,14 @@ import type { ComponentProps } from "svelte";
 
 import type BandoriStamp from "./bandori-stamp.svelte";
 
-type StampData = Omit<ComponentProps<typeof BandoriStamp>, "onremove"> & {
-  id: string;
-};
 interface PlaygroundState {
-  displayedStamps: StampData[];
+  displayedStamps: Record<string, ComponentProps<typeof BandoriStamp>>;
 }
 
 export const playground = $state<PlaygroundState>({
-  displayedStamps: [] as StampData[],
+  displayedStamps: {},
 });
 
-export function displayStamp(stamp: StampData) {
-  playground.displayedStamps.push(stamp);
+export function displayStamp(stamp: ComponentProps<typeof BandoriStamp>) {
+  playground.displayedStamps[stamp.id] = stamp;
 }

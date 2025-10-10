@@ -1,27 +1,30 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
+  import { playground } from "./state-playground.svelte";
+
   interface Props {
+    id: string;
     image: string;
     audio: string | undefined;
-    onremove: () => void;
+    sender?: string;
   }
 
-  const { image, audio, onremove }: Props = $props();
+  const { id, image, audio, sender }: Props = $props();
 
-  let imgEl = $state<HTMLImageElement>();
+  let animatingEl = $state<HTMLElement>();
   const randomX = Math.random() * 100;
   const randomY = Math.random() * 100;
 
   let shouldRemove = $state(false);
   $effect(() => {
-    if (shouldRemove && imgEl) {
-      imgEl.addEventListener(
+    if (shouldRemove && animatingEl) {
+      animatingEl.addEventListener(
         "animationend",
         () => {
           URL.revokeObjectURL(image);
           if (audio) URL.revokeObjectURL(audio);
-          onremove();
+          delete playground.displayedStamps[id];
         },
         { once: true },
       );
@@ -49,7 +52,17 @@
   style:top="{randomY}%"
   style:transform="translate({-randomX}%, {-randomY}%)"
 >
-  <img bind:this={imgEl} src={image} alt="stamp" class:hide={shouldRemove} />
+  <div bind:this={animatingEl} class="stamp-content" class:hide={shouldRemove}>
+    <img src={image} alt="stamp" />
+
+    {#if sender}
+      <span
+        class="badge badge-soft badge-accent absolute inset-x-0 -bottom-4 w-full"
+      >
+        {sender}
+      </span>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -96,12 +109,12 @@
   }
 
   .stamp,
-  .stamp > img {
+  .stamp > .stamp-content {
     height: 165px;
     width: 200px;
   }
 
-  .stamp > img {
+  .stamp > .stamp-content {
     animation: bounceIn 0.75s forwards;
 
     &.hide {

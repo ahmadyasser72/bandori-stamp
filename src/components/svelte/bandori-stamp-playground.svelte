@@ -30,7 +30,8 @@
 
     room.send(stamp);
     const loaded = await loadStamp(stamp);
-    displayStamp(loaded);
+    if (room.id === undefined) displayStamp(loaded);
+    else displayStamp({ ...loaded, sender: room.displayName });
   };
 </script>
 
@@ -83,11 +84,7 @@
 </div>
 
 <div class="pointer-events-none absolute inset-0">
-  {#each playground.displayedStamps as { id, image, audio }, idx (id)}
-    <BandoriStamp
-      {image}
-      {audio}
-      onremove={() => playground.displayedStamps.splice(idx, 1)}
-    />
+  {#each Object.values(playground.displayedStamps) as props (props.id)}
+    <BandoriStamp {...props} />
   {/each}
 </div>

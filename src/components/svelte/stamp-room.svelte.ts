@@ -29,7 +29,11 @@ export const room = $state<{
   send(stamp) {
     if (!this.channel) return;
 
-    this.channel.send({ type: "broadcast", event: "stamp", payload: stamp });
+    this.channel.send({
+      type: "broadcast",
+      event: "stamp",
+      payload: { ...stamp, sender: this.displayName },
+    });
   },
 });
 
@@ -51,9 +55,11 @@ export const initializeRoom = () => {
     room.joinTimestamp = Date.now();
 
     room.channel
-      .on("broadcast", { event: "stamp" }, (stamp) =>
-        loadStamp(stamp.payload).then(displayStamp),
-      )
+      .on("broadcast", { event: "stamp" }, async (data) => {
+        const stamp: Stamp & { sender: string } = data.payload;
+        const loaded = await loadStamp(stamp);
+        displayStamp({ ...loaded, sender: stamp.sender });
+      })
       .on("presence", { event: "sync" }, () => {
         room.participants = Object.fromEntries(
           Object.entries(room.channel!.presenceState<Presence>()).map(
