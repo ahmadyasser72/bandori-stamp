@@ -50,7 +50,8 @@ export const initializeRoom = () => {
 
     room.client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    room.displayName = localStorage.getItem("stamp-room-display-name") ?? "";
+    room.displayName =
+      localStorage.getItem("stamp-room-display-name") ?? "Anon";
 
     room.id = id;
     room.presenceId = crypto.randomUUID();
