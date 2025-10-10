@@ -5,6 +5,7 @@ import {
 } from "@supabase/supabase-js";
 import { SUPABASE_KEY, SUPABASE_URL } from "astro:env/client";
 import { onMount } from "svelte";
+import { toast } from "svelte-sonner";
 
 import type { Stamp } from "~/content.config";
 
@@ -16,11 +17,14 @@ export const room = $state<{
   channel?: RealtimeChannel;
 
   id?: string;
-  displayName?: string;
+  displayName: string;
+  joinTimestamp: number;
   participants: Record<string, string>;
 
   send: (stamp: Stamp) => void;
 }>({
+  displayName: "Anon",
+  joinTimestamp: 0,
   participants: {},
   send(stamp) {
     if (!this.channel) return;
@@ -28,6 +32,11 @@ export const room = $state<{
     this.channel.send({ type: "broadcast", event: "stamp", payload: stamp });
   },
 });
+
+interface Presence {
+  name: string;
+  joinTimestamp: number;
+}
 
 export const initializeRoom = () => {
   onMount(() => {
@@ -39,6 +48,7 @@ export const initializeRoom = () => {
     room.id = id;
     room.client = createClient(SUPABASE_URL, SUPABASE_KEY);
     room.channel = room.client.channel(room.id);
+    room.joinTimestamp = Date.now();
 
     room.channel
       .on("broadcast", { event: "stamp" }, (stamp) =>
@@ -46,17 +56,39 @@ export const initializeRoom = () => {
       )
       .on("presence", { event: "sync" }, () => {
         room.participants = Object.fromEntries(
-          Object.entries(room.channel!.presenceState<{ name: string }>()).map(
+          Object.entries(room.channel!.presenceState<Presence>()).map(
             ([key, values]) => [key, values.at(-1)!.name],
           ),
         );
+      })
+      .on<Presence>("presence", { event: "join" }, ({ key, newPresences }) => {
+        if (key in room.participants) {
+          const { name: newName } = newPresences[0]!;
+          if (room.displayName !== newName) {
+            const oldName = room.participants[key]!;
+            toast.info(`${oldName} changed their display name to ${newName}.`);
+          } else {
+            toast.info(`Display name updated to ${newName}`);
+          }
+        } else {
+          const { name, joinTimestamp } = newPresences[0]!;
+          if (room.displayName !== name && joinTimestamp > room.joinTimestamp)
+            toast.info(`${name} just joined!`);
+        }
+      })
+      .on<Presence>("presence", { event: "leave" }, ({ leftPresences }) => {
+        const { name } = leftPresences[0]!;
+        toast.info(`${name} just left.`);
       })
       .subscribe();
   });
 
   $effect(() => {
-    if (room.displayName && room.channel) {
-      room.channel.track({ name: room.displayName });
+    if (room.displayName && room.joinTimestamp !== 0 && room.channel) {
+      room.channel.track({
+        name: room.displayName,
+        joinTimestamp: room.joinTimestamp,
+      } satisfies Presence);
       localStorage.setItem("stamp-room-display-name", room.displayName);
     }
   });

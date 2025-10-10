@@ -19,6 +19,7 @@
     "iconify-icon": "^3.0.1",
     "svelte": "^5.39.11",
     "svelte-persisted-state": "^1.2.0",
+    "svelte-sonner": "^1.0.5",
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3"
   },

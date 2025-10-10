@@ -1,5 +1,6 @@
 ---
 import { base } from "astro:config/server";
+import { Toaster } from "svelte-sonner";
 
 import "~/styles/global.css";
 import Footer from "~/components/footer.astro";
@@ -21,6 +22,8 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    <Toaster richColors client:load />
+
     <div class="flex min-h-screen flex-col items-center">
       <Header {title} />
 
