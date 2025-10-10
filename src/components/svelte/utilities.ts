@@ -26,7 +26,7 @@ export const teleport: Action<HTMLElement, string> = (node, selector) => {
 
 export const loadStamp = async (stamp: Stamp) =>
   Promise.all([loadStampAudio(stamp), loadStampImage(stamp)]).then(
-    ([audio, image]) => ({ id: stamp.id, image, audio }),
+    ([audio, image]) => ({ id: crypto.randomUUID(), image, audio }),
   );
 
 export const loadStampImage = async (

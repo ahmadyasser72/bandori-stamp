@@ -10,9 +10,10 @@
   interface Props {
     memberId: string;
     stamp: Stamp;
+    onStampPlay: (stamp: Stamp) => void;
   }
 
-  const { memberId, stamp }: Props = $props();
+  const { memberId, stamp, onStampPlay }: Props = $props();
   const { image } = $derived(getStampAssetUrl(stamp));
 
   let audioUrl = $state<string>();
@@ -38,12 +39,14 @@
   />
 
   <button
-    onclick={() =>
+    onclick={() => {
+      onStampPlay(stamp);
       displayStamp({
         id: crypto.randomUUID(),
         audio: audioUrl,
         image,
-      })}
+      });
+    }}
     class={[
       "btn btn-circle btn-soft btn-accent swap swap-flip absolute right-0 bottom-0 size-12",
       audioUrl && "swap-active",

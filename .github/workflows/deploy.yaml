@@ -35,6 +35,9 @@ jobs:
 
       - name: Install, build, and upload your site
         uses: withastro/action@v3
+        env:
+          SUPABASE_URL: "${{ vars.SUPABASE_URL }}"
+          SUPABASE_KEY: "${{ vars.SUPABASE_KEY }}"
 
   deploy:
     needs: build
