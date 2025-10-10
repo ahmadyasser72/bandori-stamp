@@ -18,6 +18,7 @@ export const room = $state<{
 
   id?: string;
   displayName: string;
+  presenceId?: string;
   joinTimestamp: number;
   participants: Record<string, string>;
 
@@ -47,11 +48,15 @@ export const initializeRoom = () => {
     const id = new URL(document.URL).searchParams.get("room") ?? undefined;
     if (id === undefined) return;
 
+    room.client = createClient(SUPABASE_URL, SUPABASE_KEY);
+
     room.displayName = localStorage.getItem("stamp-room-display-name") ?? "";
 
     room.id = id;
-    room.client = createClient(SUPABASE_URL, SUPABASE_KEY);
-    room.channel = room.client.channel(room.id);
+    room.presenceId = crypto.randomUUID();
+    room.channel = room.client.channel(room.id, {
+      config: { presence: { key: room.presenceId } },
+    });
     room.joinTimestamp = Date.now();
 
     room.channel
@@ -70,7 +75,7 @@ export const initializeRoom = () => {
       .on<Presence>("presence", { event: "join" }, ({ key, newPresences }) => {
         if (key in room.participants) {
           const { name: newName } = newPresences[0]!;
-          if (room.displayName !== newName) {
+          if (room.presenceId !== key) {
             const oldName = room.participants[key]!;
             toast.info(`${oldName} changed their display name to ${newName}.`);
           } else {
@@ -78,7 +83,7 @@ export const initializeRoom = () => {
           }
         } else {
           const { name, joinTimestamp } = newPresences[0]!;
-          if (room.displayName !== name && joinTimestamp > room.joinTimestamp)
+          if (room.presenceId !== key && joinTimestamp > room.joinTimestamp)
             toast.info(`${name} just joined!`);
         }
       })
