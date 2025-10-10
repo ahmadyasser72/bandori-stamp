@@ -61,7 +61,7 @@
     >
       Filter Stamp
 
-      <iconify-icon icon="lucide:funnel" width="20"></iconify-icon>
+      <iconify-icon icon="line-md:filter" width="24"></iconify-icon>
     </button>
     <div
       bind:this={stampBrowserFilter}
@@ -176,11 +176,9 @@
     >
       {#each stamps as stamp (stamp.id)}
         {@const memberId = stamp.stampId.slice(6, 9)}
-        <StampBrowserItem
-          {memberId}
-          {stamp}
-          visible={!isFiltered(memberId, members)}
-        />
+        {#if !isFiltered(memberId, members)}
+          <StampBrowserItem {memberId} {stamp} />
+        {/if}
       {/each}
     </ul>
   </div>

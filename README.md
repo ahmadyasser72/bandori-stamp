@@ -6,6 +6,12 @@ Bandori stamp ~~spammer~~ player.
 
 This project uses the following third-party assets:
 
+### Line MD (Animated Icons)
+
+- **Source:** https://github.com/cyberalien/line-md
+- **License:** MIT License
+- **Copyright:** © Vjacheslav Trushkin
+
 ### Lucide Icons
 
 - **Source:** [https://lucide.dev/](https://lucide.dev/)
