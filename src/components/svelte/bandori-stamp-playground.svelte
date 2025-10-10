@@ -4,10 +4,14 @@
 
   import BandoriStamp from "./bandori-stamp.svelte";
   import StampBrowser from "./stamp-browser.svelte";
-  import { joinRoom } from "./stamp-room.svelte";
+  import StampRoomConfig from "./stamp-room-config.svelte";
+  import { initializeRoom, room } from "./stamp-room.svelte";
   import { isFiltered } from "./state-filter.svelte";
   import { displayStamp, playground } from "./state-playground.svelte";
   import { loadStamp } from "./utilities";
+
+  initializeRoom();
+  let showRoomMemberList = $state(false);
 
   interface Props {
     members: Member[];
@@ -17,8 +21,6 @@
   const { members, stamps }: Props = $props();
   const voicedStamps = $derived(stamps.filter(({ voiced }) => voiced));
 
-  const room = joinRoom();
-  const roomId = $derived(room.state.id);
   const showRandomStamp = async (voiced: boolean) => {
     const stamp = getRandomItem(
       (voiced ? voicedStamps : stamps).filter(
@@ -32,23 +34,50 @@
   };
 </script>
 
-<div
-  class="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col gap-4"
->
-  {#if roomId}
-    <h2 class="mb-1 text-center font-semibold">
-      Room: <span class="underline">{roomId}</span>
+{#if room.id}
+  <div
+    class="absolute top-1/3 left-1/2 grid -translate-x-1/2 -translate-y-1/2 items-center gap-2 px-4 sm:gap-x-4"
+  >
+    <h2 class="col-span-2 text-center text-xl font-medium">
+      Room "{room.id}"
     </h2>
-  {/if}
+    <button
+      onclick={() => (showRoomMemberList = !showRoomMemberList)}
+      class={[
+        "badge badge-lg badge-primary tooltip flex-1 font-medium",
+        showRoomMemberList && "tooltip-open",
+      ]}
+    >
+      <ul class="tooltip-content pointer-events-auto max-h-32 overflow-y-auto">
+        {#each Object.values(room.participants) as name, idx}
+          <li>{idx + 1} - {name}</li>
+        {/each}
+      </ul>
 
+      {Object.keys(room.participants).length}
+      <iconify-icon icon="line-md:person" width="20" class="-mr-1 -ml-2"
+      ></iconify-icon>
+      Active
+    </button>
+
+    <StampRoomConfig />
+  </div>
+{/if}
+
+<div
+  class={[
+    "absolute top-1/2 left-1/2 flex -translate-x-1/2 flex-col gap-4 transition-transform",
+    room.id ? "-translate-y-1/5" : "-translate-y-1/2",
+  ]}
+>
   <button onclick={() => showRandomStamp(false)} class="btn btn-accent"
-    >{roomId ? "Send" : "Show"} Random</button
+    >{room.id ? "Send" : "Show"} Random</button
   >
   <button onclick={() => showRandomStamp(true)} class="btn btn-accent"
-    >{roomId ? "Send" : "Show"} Random Voiced</button
+    >{room.id ? "Send" : "Show"} Random Voiced</button
   >
 
-  <StampBrowser {members} {stamps} onStampPlay={room.send} />
+  <StampBrowser {members} {stamps} />
 </div>
 
 <div class="pointer-events-none absolute inset-0">

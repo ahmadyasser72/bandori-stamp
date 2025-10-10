@@ -3,6 +3,7 @@
 
   import type { Stamp } from "~/content.config";
 
+  import { room } from "./stamp-room.svelte";
   import { displayStamp } from "./state-playground.svelte";
   import { getStampAssetUrl, loadStampAudio } from "./utilities";
   import { intersect } from "./utilities";
@@ -10,10 +11,9 @@
   interface Props {
     memberId: string;
     stamp: Stamp;
-    onStampPlay: (stamp: Stamp) => void;
   }
 
-  const { memberId, stamp, onStampPlay }: Props = $props();
+  const { memberId, stamp }: Props = $props();
   const { image } = $derived(getStampAssetUrl(stamp));
 
   let audioUrl = $state<string>();
@@ -40,7 +40,7 @@
 
   <button
     onclick={() => {
-      onStampPlay(stamp);
+      room.send(stamp);
       displayStamp({
         id: crypto.randomUUID(),
         audio: audioUrl,

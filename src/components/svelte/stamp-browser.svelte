@@ -16,10 +16,9 @@
   interface Props {
     members: Member[];
     stamps: Stamp[];
-    onStampPlay: (stamp: Stamp) => void;
   }
 
-  const { members, stamps, onStampPlay }: Props = $props();
+  const { members, stamps }: Props = $props();
   let stampBrowser = $state<HTMLDialogElement>();
   let stampBrowserFilter = $state<HTMLElement>();
 
@@ -178,7 +177,7 @@
       {#each stamps as stamp (stamp.id)}
         {@const memberId = stamp.stampId.slice(6, 9)}
         {#if !isFiltered(memberId, members)}
-          <StampBrowserItem {memberId} {stamp} {onStampPlay} />
+          <StampBrowserItem {memberId} {stamp} />
         {/if}
       {/each}
     </ul>
