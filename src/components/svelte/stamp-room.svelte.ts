@@ -28,12 +28,12 @@ export const room = $state<{
   joinTimestamp: 0,
   participants: {},
   send(stamp) {
-    if (!this.channel) return;
+    if (!this.channel || !this.presenceId) return;
 
     this.channel.send({
       type: "broadcast",
       event: "stamp",
-      payload: { ...stamp, sender: this.displayName },
+      payload: { ...stamp, sender: this.presenceId },
     });
   },
 });
@@ -64,7 +64,7 @@ export const initializeRoom = () => {
       .on("broadcast", { event: "stamp" }, async (data) => {
         const stamp: Stamp & { sender: string } = data.payload;
         const loaded = await loadStamp(stamp);
-        displayStamp({ ...loaded, sender: stamp.sender });
+        displayStamp({ ...loaded, sender: room.participants[stamp.sender]! });
       })
       .on("presence", { event: "sync" }, () => {
         room.participants = Object.fromEntries(
@@ -80,7 +80,7 @@ export const initializeRoom = () => {
             const oldName = room.participants[key]!;
             toast.info(`${oldName} changed their display name to ${newName}.`);
           } else {
-            toast.info(`Display name updated to ${newName}`);
+            toast.info(`Display name updated to ${newName}.`);
           }
         } else {
           const { name, joinTimestamp } = newPresences[0]!;
