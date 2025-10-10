@@ -91,8 +91,8 @@ export const initializeRoom = () => {
       .on<Presence>(
         "presence",
         { event: "leave" },
-        ({ key, leftPresences }) => {
-          if (room.presenceId === key) return;
+        ({ key, currentPresences, leftPresences }) => {
+          if (room.presenceId === key || currentPresences.length !== 0) return;
 
           const { name } = leftPresences[0]!;
           toast.info(`${name} just left.`);
