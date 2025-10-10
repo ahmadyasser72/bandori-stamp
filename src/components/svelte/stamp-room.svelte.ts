@@ -88,10 +88,16 @@ export const initializeRoom = () => {
             toast.info(`${name} just joined!`);
         }
       })
-      .on<Presence>("presence", { event: "leave" }, ({ leftPresences }) => {
-        const { name } = leftPresences[0]!;
-        toast.info(`${name} just left.`);
-      })
+      .on<Presence>(
+        "presence",
+        { event: "leave" },
+        ({ key, leftPresences }) => {
+          if (room.presenceId === key) return;
+
+          const { name } = leftPresences[0]!;
+          toast.info(`${name} just left.`);
+        },
+      )
       .subscribe();
   });
 
