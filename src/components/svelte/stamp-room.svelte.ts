@@ -23,6 +23,7 @@ export const room = $state<{
   participants: Record<string, string>;
 
   send: (stamp: Stamp) => void;
+  updatePresence: (active: boolean) => void;
 }>({
   displayName: "Anon",
   joinTimestamp: 0,
@@ -35,6 +36,20 @@ export const room = $state<{
       event: "stamp",
       payload: { ...stamp, sender: this.presenceId },
     });
+  },
+  updatePresence(active) {
+    if (!this.displayName || this.joinTimestamp === 0 || !this.channel) return;
+
+    const presence = {
+      name: this.displayName,
+      joinTimestamp: this.joinTimestamp,
+    } satisfies Presence;
+
+    if (active) {
+      this.channel.track(presence);
+    } else {
+      this.channel.untrack(presence);
+    }
   },
 });
 
@@ -113,15 +128,28 @@ export const initializeRoom = () => {
         },
       )
       .subscribe();
+
+    let inactiveTimer: ReturnType<typeof setTimeout>;
+    const handleInactiveTab = () => {
+      if (isTabActive()) {
+        clearTimeout(inactiveTimer);
+        room.updatePresence(true);
+      } else {
+        // send leave presence event after 20s
+        inactiveTimer = setTimeout(() => room.updatePresence(false), 20_000);
+      }
+    };
+    document.addEventListener("visibilitychange", handleInactiveTab);
+
+    return () => {
+      room.client!.removeChannel(room.channel!);
+      document.removeEventListener("visibilitychange", handleInactiveTab);
+    };
   });
 
   $effect(() => {
-    if (room.displayName && room.joinTimestamp !== 0 && room.channel) {
-      room.channel.track({
-        name: room.displayName,
-        joinTimestamp: room.joinTimestamp,
-      } satisfies Presence);
-      localStorage.setItem("stamp-room-display-name", room.displayName);
-    }
+    room.displayName;
+    room.updatePresence(true);
+    localStorage.setItem("stamp-room-display-name", room.displayName);
   });
 };
