@@ -74,8 +74,11 @@ export const initializeRoom = () => {
         );
       })
       .on<Presence>("presence", { event: "join" }, ({ key, newPresences }) => {
+        // if they already here...
         if (key in room.participants) {
           const { name: newName } = newPresences[0]!;
+
+          // if they are not ourselves...
           if (room.presenceId !== key) {
             const oldName = room.participants[key]!;
             toast.info(`${oldName} changed their display name to ${newName}.`);
@@ -84,6 +87,7 @@ export const initializeRoom = () => {
           }
         } else {
           const { name, joinTimestamp } = newPresences[0]!;
+          // if they are not ourselves AND if they join later than we do
           if (room.presenceId !== key && joinTimestamp > room.joinTimestamp)
             toast.info(`${name} just joined!`);
         }
@@ -92,6 +96,7 @@ export const initializeRoom = () => {
         "presence",
         { event: "leave" },
         ({ key, currentPresences, leftPresences }) => {
+          // if they are ourselves OR they're still here, early exit
           if (room.presenceId === key || currentPresences.length !== 0) return;
 
           const { name } = leftPresences[0]!;
