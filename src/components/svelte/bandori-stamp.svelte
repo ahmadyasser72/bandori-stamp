@@ -1,13 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
+  import { isColorDark } from "~/utilities";
+
+  import type { Participant } from "./stamp-room.svelte";
   import { playground } from "./state-playground.svelte";
 
   interface Props {
     id: string;
     image: string;
     audio: string | undefined;
-    sender?: string;
+    sender?: Pick<Participant, "displayName" | "badgeColor">;
   }
 
   const { id, image, audio, sender }: Props = $props();
@@ -55,11 +58,17 @@
   <div bind:this={animatingEl} class="stamp-content" class:hide={shouldRemove}>
     <img src={image} alt="stamp" />
 
-    {#if sender}
+    {#if sender !== undefined}
       <span
-        class="badge badge-soft badge-accent absolute inset-x-0 -bottom-4 w-full"
+        class="badge badge-neutral absolute inset-x-0 -bottom-4 w-full"
+        style:--badge-color={sender.badgeColor}
+        style:--badge-fg={sender.badgeColor === undefined
+          ? undefined
+          : isColorDark(sender.badgeColor)
+            ? "white"
+            : "black"}
       >
-        {sender}
+        {sender.displayName}
       </span>
     {/if}
   </div>

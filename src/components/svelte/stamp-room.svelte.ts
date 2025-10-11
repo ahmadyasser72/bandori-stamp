@@ -12,68 +12,68 @@ import type { Stamp } from "~/content.config";
 import { displayStamp } from "./state-playground.svelte";
 import { isTabActive, loadStamp } from "./utilities";
 
-export const room = $state<{
+export interface Participant {
+  id: string;
+  displayName: string;
+  badgeColor: string | undefined; // #000000
+  joined: number; // Date.now()
+}
+
+export interface RoomState {
+  id?: string | undefined;
   client?: SupabaseClient;
   channel?: RealtimeChannel;
 
-  id?: string;
-  displayName: string;
-  presenceId?: string;
-  joinTimestamp: number;
-  participants: Record<string, string>;
+  self: Participant;
+  participants: Record<string, Participant>;
 
   send: (stamp: Stamp) => void;
   updatePresence: (active: boolean) => void;
-}>({
-  displayName: "Anon",
-  joinTimestamp: 0,
+}
+
+const LOCAL_STORAGE_STATE_KEY = "stamp-room-self-state";
+export const room = $state<RoomState>({
   participants: {},
+  self: {
+    id: crypto.randomUUID(),
+    displayName: "Anon",
+    badgeColor: undefined,
+    joined: 0,
+  },
+
   send(stamp) {
-    if (!this.channel || !this.presenceId) return;
+    if (!this.channel) return;
 
     this.channel.send({
       type: "broadcast",
       event: "stamp",
-      payload: { ...stamp, sender: this.presenceId },
+      payload: { ...stamp, sender: this.self.id },
     });
   },
   updatePresence(active) {
-    if (!this.displayName || this.joinTimestamp === 0 || !this.channel) return;
+    if (this.self.joined === 0 || !this.channel) return;
 
-    const presence = {
-      name: this.displayName,
-      joinTimestamp: this.joinTimestamp,
-    } satisfies Presence;
-
-    if (active) {
-      this.channel.track(presence);
-    } else {
-      this.channel.untrack(presence);
-    }
+    if (active) this.channel.track(this.self);
+    else this.channel.untrack(this.self);
   },
 });
 
-interface Presence {
-  name: string;
-  joinTimestamp: number;
-}
-
 export const initializeRoom = () => {
   onMount(() => {
-    const id = new URL(document.URL).searchParams.get("room") ?? undefined;
-    if (id === undefined) return;
+    room.id = new URL(document.URL).searchParams.get("room") ?? undefined;
+    if (room.id === undefined) return;
 
     room.client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    room.displayName =
-      localStorage.getItem("stamp-room-display-name") ?? "Anon";
+    room.self = {
+      ...room.self,
+      ...JSON.parse(localStorage.getItem(LOCAL_STORAGE_STATE_KEY) ?? "{}"),
+      joined: Date.now(),
+    };
 
-    room.id = id;
-    room.presenceId = crypto.randomUUID();
     room.channel = room.client.channel(room.id, {
-      config: { presence: { key: room.presenceId } },
+      config: { presence: { key: room.self.id } },
     });
-    room.joinTimestamp = Date.now();
 
     room.channel
       .on("broadcast", { event: "stamp" }, async (data) => {
@@ -81,53 +81,62 @@ export const initializeRoom = () => {
 
         const stamp: Stamp & { sender: string } = data.payload;
         const loaded = await loadStamp(stamp);
-        displayStamp({ ...loaded, sender: room.participants[stamp.sender]! });
+        displayStamp({
+          ...loaded,
+          sender: room.participants[stamp.sender]!,
+        });
       })
       .on("presence", { event: "sync" }, () => {
         room.participants = Object.fromEntries(
-          Object.entries(room.channel!.presenceState<Presence>()).map(
-            ([key, values]) => [key, values.at(-1)!.name],
+          Object.entries(room.channel!.presenceState<Participant>()).map(
+            ([key, values]) => [key, values.at(-1)!],
           ),
         );
       })
-      .on<Presence>("presence", { event: "join" }, ({ key, newPresences }) => {
-        if (!isTabActive()) return;
+      .on<Participant>(
+        "presence",
+        { event: "join" },
+        ({ key, newPresences }) => {
+          if (!isTabActive()) return;
 
-        // if they already here...
-        if (key in room.participants) {
-          const oldName = room.participants[key]!;
-          const { name: newName } = newPresences[0]!;
+          // if they already here...
+          if (key in room.participants) {
+            const oldName = room.participants[key]!.displayName;
+            const newName = newPresences[0]!.displayName;
 
-          // if name is not modified
-          if (oldName === newName) return;
+            // if name is not modified
+            if (oldName === newName) return;
 
-          // if they are not ourselves...
-          if (room.presenceId !== key) {
-            toast.info(`${oldName} changed their display name to ${newName}.`);
+            // if they are not ourselves...
+            if (room.self.id !== key) {
+              toast.info(
+                `${oldName} changed their display name to ${newName}.`,
+              );
+            } else {
+              toast.info(`Display name updated to ${newName}.`);
+            }
           } else {
-            toast.info(`Display name updated to ${newName}.`);
+            const { displayName, joined } = newPresences[0]!;
+            // if they are not ourselves AND if they join later than we do
+            if (room.self.id !== key && joined > room.self.joined)
+              toast.info(`${displayName} just joined!`);
           }
-        } else {
-          const { name, joinTimestamp } = newPresences[0]!;
-          // if they are not ourselves AND if they join later than we do
-          if (room.presenceId !== key && joinTimestamp > room.joinTimestamp)
-            toast.info(`${name} just joined!`);
-        }
-      })
-      .on<Presence>(
+        },
+      )
+      .on<Participant>(
         "presence",
         { event: "leave" },
         ({ key, currentPresences, leftPresences }) => {
-          // if they are ourselves OR they're still here, early exit
           if (
             !isTabActive() ||
-            room.presenceId === key ||
+            // if they are ourselves OR they're still here, early exit
+            room.self.id === key ||
             currentPresences.length !== 0
           )
             return;
 
-          const { name } = leftPresences[0]!;
-          toast.info(`${name} just left.`);
+          const { displayName } = leftPresences[0]!;
+          toast.info(`${displayName} just left.`);
         },
       )
       .subscribe();
@@ -138,8 +147,8 @@ export const initializeRoom = () => {
         clearTimeout(inactiveTimer);
         room.updatePresence(true);
       } else {
-        // send leave presence event after 20s
-        inactiveTimer = setTimeout(() => room.updatePresence(false), 20_000);
+        // send leave presence event after 15s
+        inactiveTimer = setTimeout(() => room.updatePresence(false), 15_000);
       }
     };
     document.addEventListener("visibilitychange", handleInactiveTab);
@@ -151,8 +160,8 @@ export const initializeRoom = () => {
   });
 
   $effect(() => {
-    room.displayName;
+    room.self;
     room.updatePresence(true);
-    localStorage.setItem("stamp-room-display-name", room.displayName);
+    localStorage.setItem(LOCAL_STORAGE_STATE_KEY, JSON.stringify(room.self));
   });
 };

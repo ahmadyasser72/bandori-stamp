@@ -31,7 +31,7 @@
     room.send(stamp);
     const loaded = await loadStamp(stamp);
     if (room.id === undefined) displayStamp(loaded);
-    else displayStamp({ ...loaded, sender: room.displayName });
+    else displayStamp({ ...loaded, sender: room.self });
   };
 </script>
 
@@ -50,9 +50,11 @@
       ]}
     >
       <ul class="tooltip-content pointer-events-auto max-h-32 overflow-y-auto">
-        {#each Object.entries(room.participants) as [key, name], idx}
+        {#each Object.entries(room.participants) as [key, { displayName }], idx}
           <li>
-            {idx + 1} - {room.presenceId === key ? `${name} (You)` : name}
+            {idx + 1} - {room.self.id === key
+              ? `${displayName} (You)`
+              : displayName}
           </li>
         {/each}
       </ul>
