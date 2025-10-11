@@ -60,13 +60,9 @@
 
     {#if sender !== undefined}
       <span
-        class="badge badge-neutral absolute inset-x-0 -bottom-4 w-full"
+        class="badge absolute inset-x-0 -bottom-4 w-full"
         style:--badge-color={sender.badgeColor}
-        style:--badge-fg={sender.badgeColor === undefined
-          ? undefined
-          : isColorDark(sender.badgeColor)
-            ? "white"
-            : "black"}
+        style:--badge-fg={isColorDark(sender.badgeColor) ? "white" : "black"}
       >
         {sender.displayName}
       </span>

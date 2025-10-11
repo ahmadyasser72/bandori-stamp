@@ -8,6 +8,7 @@ import { onMount } from "svelte";
 import { toast } from "svelte-sonner";
 
 import type { Stamp } from "~/content.config";
+import { getRandomHexColor } from "~/utilities";
 
 import { displayStamp } from "./state-playground.svelte";
 import { isTabActive, loadStamp } from "./utilities";
@@ -15,7 +16,7 @@ import { isTabActive, loadStamp } from "./utilities";
 export interface Participant {
   id: string;
   displayName: string;
-  badgeColor: string | undefined; // #000000
+  badgeColor: string; // #000000
   joined: number; // Date.now()
 }
 
@@ -37,7 +38,7 @@ export const room = $state<RoomState>({
   self: {
     id: crypto.randomUUID(),
     displayName: "Anon",
-    badgeColor: undefined,
+    badgeColor: getRandomHexColor(),
     joined: 0,
   },
 

@@ -1,6 +1,10 @@
 export const getRandomItem = <T>(array: T[]) =>
   array[Math.floor(Math.random() * array.length)]!;
 
+// https://stackoverflow.com/a/5092846
+export const getRandomHexColor = () =>
+  "#" + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, "0");
+
 export const isColorDark = (hex: string) => {
   const startIndex = hex.startsWith("#") ? 1 : 0;
 
