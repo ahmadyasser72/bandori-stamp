@@ -1,0 +1,44 @@
+---
+import type { GetStaticPaths } from "astro";
+
+import { fetchStamps } from "~/lib/fetch-stamp";
+
+export const partial = true;
+
+export const getStaticPaths = (async ({ paginate }) => {
+	const stamps = await fetchStamps();
+	return paginate(stamps, { pageSize: 64 });
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+---
+
+{
+	page.data.map(({ id, voiced }, idx, array) => (
+		<button
+			data-stamp={id}
+			data-stamp-voiced={voiced}
+			class="btn btn-ghost relative size-32 px-2 py-0"
+			{...(page.url.next &&
+				idx === array.length - 1 && {
+					"hx-get": page.url.next,
+					"hx-trigger": "intersect once threshold:0.5",
+					"hx-swap": "afterend",
+				})}
+		>
+			<img
+				src={`/static/stamp_${id}.png`}
+				alt={`Stamp #${id}`}
+				loading="lazy"
+				decoding="async"
+				class="w-full"
+			/>
+
+			{voiced && (
+				<div class="btn bg-base-100/50 btn-circle absolute right-4 bottom-4 size-6 border-0 backdrop-blur-sm">
+					<iconify-icon icon="lucide:volume-2" class="size-4" />
+				</div>
+			)}
+		</button>
+	))
+}

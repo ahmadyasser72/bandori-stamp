@@ -1,16 +1,34 @@
 ---
-
+import BaseLayout from "~/layouts/base-layout.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout>
+	<div
+		id="stamp-list"
+		hx-get="/stamps/1"
+		hx-trigger="intersect once"
+		class="container mx-auto flex flex-wrap justify-center gap-x-2 gap-y-1 p-2"
+	>
+		Loading stamps...
+	</div>
+</BaseLayout>
+
+<script>
+	const stampList = document.getElementById("stamp-list")!;
+	stampList.addEventListener("click", (event) => {
+		const target =
+			event.target instanceof HTMLImageElement
+				? event.target.closest("button")!
+				: (event.target as HTMLButtonElement);
+
+		const stamp = {
+			id: target.dataset.stamp!,
+			voiced: target.dataset.stampVoiced === "true",
+		};
+
+		if (stamp.voiced) {
+			const audio = new Audio(`/static/stamp_${stamp.id}.mp3`);
+			audio.play();
+		}
+	});
+</script>
