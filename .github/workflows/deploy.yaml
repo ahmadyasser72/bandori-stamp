@@ -1,0 +1,65 @@
+name: deploy-cloudflare-workers
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+concurrency:
+  group: deploy-cloudflare-workers-${{ github.ref }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BESTDORI_CACHE: ./.bestdori-cache
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Cache bestdori responses
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.BESTDORI_CACHE }}/*.json
+            ${{ env.BESTDORI_CACHE }}/*.png
+            ${{ env.BESTDORI_CACHE }}/*.mp3
+          key: bestdori-response-${{ github.run_id }}
+          restore-keys: bestdori-response-
+
+      - name: Build site
+        run: bun run build
+      - name: Upload site build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          include-hidden-files: true
+          path: dist/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: cloudflare-worker/${{ github.ref_name }}
+      url: ${{ steps.deploy-cloudflare-worker.outputs.deployment-url }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: site
+          path: dist/
+
+      - name: Deploy to Cloudflare Workers
+        id: deploy-cloudflare-worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: ${{ github.ref == 'refs/heads/main' && 'deploy' || 'versions upload' }}
