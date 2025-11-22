@@ -3,32 +3,158 @@ import BaseLayout from "~/layouts/base-layout.astro";
 ---
 
 <BaseLayout>
-	<div
-		id="stamp-list"
-		hx-get="/stamps/1"
-		hx-trigger="intersect once"
-		class="container mx-auto flex flex-wrap justify-center gap-x-2 gap-y-1 p-2"
-	>
-		Loading stamps...
-	</div>
+	<main class="flex h-screen overflow-auto max-md:flex-col">
+		<div
+			id="stamp-container"
+			class="bg-base-100/80 sticky top-0 z-10 shadow-sm backdrop-blur-sm max-md:min-h-64 md:flex-4/3 md:border-r lg:left-0 lg:flex-5/3"
+		>
+		</div>
+
+		<div
+			id="stamp-list"
+			hx-get="/stamps/1"
+			hx-trigger="intersect once"
+			class="container mx-auto flex flex-wrap justify-center gap-x-2 gap-y-1 p-2"
+		>
+			Loading stamps...
+		</div>
+	</main>
+
+	<template id="stamp-template">
+		<div
+			class="stamp absolute w-24 origin-top-left select-none md:w-36 lg:w-48"
+		>
+			<div class="stamp-content">
+				<img class="w-full" />
+			</div>
+		</div>
+	</template>
 </BaseLayout>
 
 <script>
-	const stampList = document.getElementById("stamp-list")!;
-	stampList.addEventListener("click", (event) => {
-		const target =
-			event.target instanceof HTMLImageElement
-				? event.target.closest("button")!
-				: (event.target as HTMLButtonElement);
+	const stampContainer = document.getElementById("stamp-container")!;
+	const stampTemplate = document.getElementById(
+		"stamp-template",
+	)! as HTMLTemplateElement;
 
-		const stamp = {
-			id: target.dataset.stamp!,
-			voiced: target.dataset.stampVoiced === "true",
-		};
+	document
+		.getElementById("stamp-list")!
+		.addEventListener("click", async (event) => {
+			const stampButton =
+				event.target instanceof HTMLImageElement
+					? event.target.closest("button")
+					: event.target;
+			if (!(stampButton instanceof HTMLButtonElement)) return;
 
-		if (stamp.voiced) {
-			const audio = new Audio(`/static/stamp_${stamp.id}.mp3`);
-			audio.play();
-		}
-	});
+			const stampImage = stampButton.querySelector("img");
+			if (!(stampImage instanceof HTMLImageElement)) return;
+
+			stampButton.disabled = true;
+			stampImage.classList.add("brightness-50", "scale-125");
+			const reEnableStamp = () => {
+				stampButton.disabled = false;
+				stampImage.classList.remove("brightness-50", "scale-125");
+			};
+
+			const id = stampButton.dataset.stamp!;
+			const stamp = {
+				image: `/static/stamp_${id}.png`,
+				voice:
+					stampButton.dataset.stampVoiced === "true" &&
+					`/static/stamp_${id}.mp3`,
+			};
+
+			const showStamp = (audio?: HTMLAudioElement) => {
+				const template = stampTemplate.content.cloneNode(true) as HTMLElement;
+				template.querySelector("img")!.src = stamp.image;
+
+				const randomX = Math.random() * 100 + "%";
+				const randomY = Math.random() * 100 + "%";
+				const stampElement = template.querySelector<HTMLElement>(".stamp")!;
+				stampElement.style.left = randomX;
+				stampElement.style.top = randomY;
+				stampElement.style.translate = `-${randomX} -${randomY}`;
+
+				const stampContent =
+					template.querySelector<HTMLElement>(".stamp-content")!;
+				stampContent.style.animation = "bounceIn 0.75s forwards";
+
+				const removeStamp = () => stampContainer.removeChild(stampElement);
+				const animateOut = () =>
+					new Promise<void>((resolve) => {
+						stampContent.addEventListener("animationend", () => resolve(), {
+							once: true,
+						});
+						stampContent.style.animation = "bounceOut 0.75s forwards";
+					});
+
+				stampContainer.appendChild(stampElement);
+				const cleanup = async () => {
+					await animateOut();
+					removeStamp();
+					reEnableStamp();
+				};
+
+				if (audio)
+					audio.addEventListener("ended", () => cleanup(), { once: true });
+				else setTimeout(cleanup, 1667);
+			};
+
+			if (!stamp.voice) showStamp();
+			else {
+				const audio = new Audio(stamp.voice);
+				audio.addEventListener(
+					"canplaythrough",
+					() => {
+						audio.play();
+						showStamp(audio);
+					},
+					{ once: true },
+				);
+			}
+		});
 </script>
+
+<style>
+	@keyframes bounceIn {
+		0% {
+			transform: scale(0.3);
+			opacity: 0;
+		}
+		20% {
+			transform: scale(1.02);
+			opacity: 1;
+		}
+		40% {
+			transform: scale(0.9);
+		}
+		60% {
+			transform: scale(1.03);
+		}
+		80% {
+			transform: scale(0.97);
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	@keyframes bounceOut {
+		0% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		20% {
+			transform: scale(0.9);
+		}
+		50% {
+			transform: scale(1.03);
+			opacity: 1;
+		}
+		100% {
+			transform: scale(0.3);
+			opacity: 0;
+		}
+	}
+</style>

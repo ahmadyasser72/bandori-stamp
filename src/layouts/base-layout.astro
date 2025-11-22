@@ -11,16 +11,11 @@ import "~/styles/global.css";
 		<title>Astro</title>
 	</head>
 	<body>
-		<main>
-			<slot />
-		</main>
+		<slot />
 	</body>
 </html>
 
 <script>
-	import htmx from "htmx.org";
-
+	import "htmx.org";
 	import "iconify-icon";
-
-	window.htmx = htmx;
 </script>

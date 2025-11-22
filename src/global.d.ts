@@ -1,7 +1,5 @@
 declare global {
-	interface Window {
-		htmx: typeof import("htmx.org").default;
-	}
+	var htmx: typeof import("htmx.org").default;
 }
 
 export {};
