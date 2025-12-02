@@ -12,9 +12,8 @@ export async function bestdori<T>(
 	pathname: string,
 	type: "buffer" | "json" = "json",
 ): Promise<T | ArrayBuffer> {
-	return fetchBestdori(pathname, type === "json" && import.meta.env.PROD).then(
-		(response) =>
-			type === "buffer" ? response.arrayBuffer() : response.json(),
+	return fetchBestdori(pathname, import.meta.env.PROD).then((response) =>
+		type === "buffer" ? response.arrayBuffer() : response.json(),
 	);
 }
 
