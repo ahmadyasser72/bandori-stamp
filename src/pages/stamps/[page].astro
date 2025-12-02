@@ -14,17 +14,11 @@ const { page } = Astro.props;
 ---
 
 {
-	page.data.map(({ id, voiced }, idx, array) => (
+	page.data.map(({ id, voiced }) => (
 		<button
 			data-stamp={id}
 			data-stamp-voiced={voiced}
 			class="btn btn-ghost relative size-32 px-2 py-0"
-			{...(page.url.next &&
-				idx === array.length - 1 && {
-					"hx-get": page.url.next,
-					"hx-trigger": "intersect once threshold:0.5",
-					"hx-swap": "afterend",
-				})}
 		>
 			<img
 				src={`/static/stamp_${id}.png`}
@@ -41,4 +35,15 @@ const { page } = Astro.props;
 			)}
 		</button>
 	))
+}
+
+{
+	page.url.next && (
+		<div
+			hx-get={page.url.next}
+			hx-trigger="intersect once"
+			hx-swap="outerHTML"
+			class="size-32"
+		/>
+	)
 }
