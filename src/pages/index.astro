@@ -49,13 +49,6 @@ import BaseLayout from "~/layouts/base-layout.astro";
 			const stampImage = stampButton.querySelector("img");
 			if (!(stampImage instanceof HTMLImageElement)) return;
 
-			stampButton.disabled = true;
-			stampImage.classList.add("brightness-50", "scale-125");
-			const reEnableStamp = () => {
-				stampButton.disabled = false;
-				stampImage.classList.remove("brightness-50", "scale-125");
-			};
-
 			const id = stampButton.dataset.stamp!;
 			const stamp = {
 				image: `/static/stamp_${id}.png`,
@@ -97,7 +90,6 @@ import BaseLayout from "~/layouts/base-layout.astro";
 				const cleanup = async () => {
 					await animateOut();
 					removeStamp();
-					reEnableStamp();
 				};
 
 				if (audio)
