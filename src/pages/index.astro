@@ -77,7 +77,12 @@ import BaseLayout from "~/layouts/base-layout.astro";
 
 				const stampContent =
 					template.querySelector<HTMLElement>(".stamp-content")!;
-				stampContent.style.animation = "bounceIn 0.75s forwards";
+				stampContent.addEventListener(
+					"animationend",
+					() => (stampContent.style.animation = ""),
+					{ once: true },
+				);
+				stampContent.style.animation = "bounceIn 0.3s forwards";
 
 				const removeStamp = () => stampContainer.removeChild(stampElement);
 				const animateOut = () =>
@@ -85,7 +90,7 @@ import BaseLayout from "~/layouts/base-layout.astro";
 						stampContent.addEventListener("animationend", () => resolve(), {
 							once: true,
 						});
-						stampContent.style.animation = "bounceOut 0.75s forwards";
+						stampContent.style.animation = "bounceIn 0.25s reverse";
 					});
 
 				stampContainer.appendChild(stampElement);
@@ -118,43 +123,12 @@ import BaseLayout from "~/layouts/base-layout.astro";
 <style>
 	@keyframes bounceIn {
 		0% {
-			transform: scale(0.3);
+			transform: scale(0.2);
 			opacity: 0;
-		}
-		20% {
-			transform: scale(1.02);
-			opacity: 1;
-		}
-		40% {
-			transform: scale(0.9);
-		}
-		60% {
-			transform: scale(1.03);
-		}
-		80% {
-			transform: scale(0.97);
 		}
 		100% {
 			transform: scale(1);
 			opacity: 1;
-		}
-	}
-
-	@keyframes bounceOut {
-		0% {
-			transform: scale(1);
-			opacity: 1;
-		}
-		20% {
-			transform: scale(0.9);
-		}
-		50% {
-			transform: scale(1.03);
-			opacity: 1;
-		}
-		100% {
-			transform: scale(0.3);
-			opacity: 0;
 		}
 	}
 </style>
