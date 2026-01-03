@@ -13,7 +13,6 @@
 	"dependencies": {
 		"@astrojs/cloudflare": "12.6.12",
 		"@tailwindcss/vite": "4.1.18",
-		"ably": "2.16.0",
 		"astro": "5.16.6",
 		"daisyui": "5.5.14",
 		"htmx.org": "2.0.8",
