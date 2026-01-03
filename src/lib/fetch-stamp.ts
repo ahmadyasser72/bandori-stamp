@@ -18,7 +18,7 @@ const fetchStampByRegion = async (region: Region) => {
 		.map((it) => it.replace(/\.mp3$/, ""));
 
 	return stampImages.map((id) => ({
-		id: Number(id.split("_")[1]),
+		id: id.split("_")[1].padStart(6, "0"),
 		region,
 		voiced: stampVoices.includes(id),
 	}));
@@ -26,7 +26,7 @@ const fetchStampByRegion = async (region: Region) => {
 
 export const fetchStamps = async () => {
 	const stamps = new Map<
-		number,
+		string,
 		Awaited<ReturnType<typeof fetchStampByRegion>>[number]
 	>();
 
@@ -41,6 +41,6 @@ export const fetchStamps = async () => {
 	}
 
 	return [...stamps.values()]
-		.sort((a, b) => a.id - b.id)
+		.sort((a, b) => Number(a.id) - Number(b.id))
 		.sort((a, b) => -Number(a.voiced && !b.voiced));
 };

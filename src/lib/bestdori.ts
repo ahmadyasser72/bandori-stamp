@@ -12,7 +12,7 @@ export async function bestdori<T>(
 	pathname: string,
 	type: "buffer" | "json" = "json",
 ): Promise<T | ArrayBuffer> {
-	return fetchBestdori(pathname, import.meta.env.PROD).then((response) =>
+	return fetchBestdori(pathname).then((response) =>
 		type === "buffer" ? response.arrayBuffer() : response.json(),
 	);
 }
@@ -20,12 +20,11 @@ export async function bestdori<T>(
 const BESTDORI_CACHE_DIR = ".bestdori-cache";
 
 const fetchBestdori = limitFunction(
-	async (pathname: string, skipCache: boolean) => {
+	async (pathname: string) => {
 		const url = new URL(pathname, "https://bestdori.com");
 
 		const cachePath = getCachePath(url);
-		if (!skipCache && existsSync(cachePath))
-			return new Response(readFileSync(cachePath));
+		if (existsSync(cachePath)) return new Response(readFileSync(cachePath));
 
 		const response = await fetch(url);
 		if (!isResponseOk(response)) {

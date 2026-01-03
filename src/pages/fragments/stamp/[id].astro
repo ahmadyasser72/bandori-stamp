@@ -1,0 +1,24 @@
+---
+import type { GetStaticPaths } from "astro";
+
+import { fetchStamps } from "~/lib/fetch-stamp";
+
+export const partial = true;
+
+export const getStaticPaths = (async () => {
+	const stamps = await fetchStamps();
+
+	return stamps.map((stamp) => ({
+		params: { id: stamp.id },
+		props: { stamp },
+	}));
+}) satisfies GetStaticPaths;
+
+const { id } = Astro.params;
+const { stamp } = Astro.props;
+
+const image = `/static/stamp_${id}.png`;
+const audio = stamp.voiced ? `/static/stamp_${id}.mp3` : null;
+---
+
+<bandori-stamp {audio} {image}></bandori-stamp>

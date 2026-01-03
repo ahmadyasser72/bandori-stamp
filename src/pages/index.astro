@@ -11,116 +11,18 @@ import BaseLayout from "~/layouts/base-layout.astro";
 		</div>
 
 		<div
-			id="stamp-list"
-			hx-get="/stamps/1"
-			hx-trigger="intersect once"
+			hx-target="#stamp-container"
+			hx-swap="beforeend"
 			class="container mx-auto flex flex-wrap justify-center gap-x-2 gap-y-1 p-2"
 		>
-			Loading stamps...
-		</div>
-	</main>
-
-	<template id="stamp-template">
-		<div
-			class="stamp absolute w-24 origin-top-left select-none md:w-36 lg:w-48"
-		>
-			<div class="stamp-content">
-				<img class="w-full" />
+			<div
+				hx-target="this"
+				hx-get="/stamps/1"
+				hx-trigger="intersect once"
+				hx-swap="outerHTML"
+			>
+				Loading stamps...
 			</div>
 		</div>
-	</template>
+	</main>
 </BaseLayout>
-
-<script>
-	const stampContainer = document.getElementById("stamp-container")!;
-	const stampTemplate = document.getElementById(
-		"stamp-template",
-	)! as HTMLTemplateElement;
-
-	document
-		.getElementById("stamp-list")!
-		.addEventListener("click", async (event) => {
-			const stampButton =
-				event.target instanceof HTMLImageElement
-					? event.target.closest("button")
-					: event.target;
-			if (!(stampButton instanceof HTMLButtonElement)) return;
-
-			const stampImage = stampButton.querySelector("img");
-			if (!(stampImage instanceof HTMLImageElement)) return;
-
-			const id = stampButton.dataset.stamp!;
-			const stamp = {
-				image: `/static/stamp_${id}.png`,
-				voice:
-					stampButton.dataset.stampVoiced === "true" &&
-					`/static/stamp_${id}.mp3`,
-			};
-
-			const showStamp = (audio?: HTMLAudioElement) => {
-				const template = stampTemplate.content.cloneNode(true) as HTMLElement;
-				template.querySelector("img")!.src = stamp.image;
-
-				const randomX = Math.random() * 100 + "%";
-				const randomY = Math.random() * 100 + "%";
-				const stampElement = template.querySelector<HTMLElement>(".stamp")!;
-				stampElement.style.left = randomX;
-				stampElement.style.top = randomY;
-				stampElement.style.translate = `-${randomX} -${randomY}`;
-
-				const stampContent =
-					template.querySelector<HTMLElement>(".stamp-content")!;
-				stampContent.addEventListener(
-					"animationend",
-					() => (stampContent.style.animation = ""),
-					{ once: true },
-				);
-				stampContent.style.animation = "bounceIn 0.3s forwards";
-
-				const removeStamp = () => stampContainer.removeChild(stampElement);
-				const animateOut = () =>
-					new Promise<void>((resolve) => {
-						stampContent.addEventListener("animationend", () => resolve(), {
-							once: true,
-						});
-						stampContent.style.animation = "bounceIn 0.25s reverse";
-					});
-
-				stampContainer.appendChild(stampElement);
-				const cleanup = async () => {
-					await animateOut();
-					removeStamp();
-				};
-
-				if (audio)
-					audio.addEventListener("ended", () => cleanup(), { once: true });
-				else setTimeout(cleanup, 1667);
-			};
-
-			if (!stamp.voice) showStamp();
-			else {
-				const audio = new Audio(stamp.voice);
-				audio.addEventListener(
-					"canplaythrough",
-					() => {
-						audio.play();
-						showStamp(audio);
-					},
-					{ once: true },
-				);
-			}
-		});
-</script>
-
-<style>
-	@keyframes bounceIn {
-		0% {
-			transform: scale(0.2);
-			opacity: 0;
-		}
-		100% {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
-</style>

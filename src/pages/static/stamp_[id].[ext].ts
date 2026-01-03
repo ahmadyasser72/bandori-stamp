@@ -32,7 +32,7 @@ export const getStaticPaths = (async () => {
 			// skip mp3 on not-voiced stamps
 			.filter((ext) => stamp.voiced || ext !== "mp3")
 			.map((ext) => ({
-				params: { id: stamp.id.toString(), ext },
+				params: { id: stamp.id, ext },
 				props: { stamp },
 			})),
 	);

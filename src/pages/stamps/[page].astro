@@ -16,8 +16,7 @@ const { page } = Astro.props;
 {
 	page.data.map(({ id, voiced }) => (
 		<button
-			data-stamp={id}
-			data-stamp-voiced={voiced}
+			hx-get={`/fragments/stamp/${id}`}
 			class="btn btn-ghost relative size-32 px-2 py-0"
 		>
 			<img
