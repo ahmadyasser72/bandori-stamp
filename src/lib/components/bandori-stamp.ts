@@ -34,7 +34,7 @@ const stampStylesheet: CSSStyleSheet | null = (() => {
 		}
 	`);
 
- 	return sheet;
+	return sheet;
 })();
 
 export class BandoriStamp extends HTMLElement {
